@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>わたしメーター</title>
+
+
+  <style>
+    .header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.icon {
+  font-size: 40px;
+  margin-bottom: 5px;
+}
+
+.header p {
+  font-size: 12px;
+  color: #888;
+}
+body {
+  font-family: sans-serif;
+  background: linear-gradient(180deg, #f7f7fb, #eef0ff);
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+  margin: 0 auto;
+}
+    button {
+  background: linear-gradient(135deg, #6c6cff, #9f9fff);
+  color: white;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 6px 15px rgba(108,108,255,0.25);
+  transition: 0.2s;
+  width: 80%;
+  display: block;
+  margin: 15px auto;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(108,108,255,0.3);
+}
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+
+    .good { color: green; }
+    .normal { color: orange; }
+    .bad { color: red; }
+
+body {
+  font-family: "Arial", sans-serif;
+  background: #f7f7fb;
+  padding: 20px;
+}
+
+h1 {
+  color: #6c6cff;
+}
+
+input {
+  margin: 5px 0;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  max-width: 500px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 10px;
+  background: #6c6cff;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #5555ff;
+}
+
+.good { color: #4caf50; }
+.normal { color: #ff9800; }
+.bad { color: #f44336; }
+
+.popup {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #6c6cff;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 0.3s;
+}
+.popup.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#myChart {
+  max-width: 100%;
+  height: 200px !important;
+  margin-top: 20px;
+}
+
+
+
+
+
+</style>
+
+
+  <!-- Chart.jsはここ -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+
+        <style>
+  body {
+    font-family: "Arial";
+    background: #f7f7fb;
+  }
+
+  input {
+  width: 80px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin: 5px 0 10px;
+}
+
+button {
+  width: 70%;
+  display: block;
+  margin: 15px auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* ←これが神✨ */
+  margin-bottom: 10px;
+  margin: 8px auto;
+  max-width: 300px;
+}
+
+label {
+  font-size: 14px;
+}
+
+input {
+  width: 60px;
+  text-align: center;
+  border-radius: 10px;
+  padding: 6px;
+}
+
+label {
+  width: 140px;
+  color: #555;
+}
+
+h1 {
+  text-align: center;
+  color: #6c6cff;
+  margin-bottom: 5px;
+}
+</style>
+
+
+<center>
+<h1>わたしメーター</h1>
+ 今日のわたしの状態をチェック<br><br>
+<p style="text-align:center; color:#888; font-size:12px;">
+ 疲れ0〜MAX5で入力する
+</p>
+
+</center>
+<div class="row">
+  <label>身体の疲れ</label>
+ <input type="number" id="body"></div><br>
+<div class="row">
+ <label>対人関係</label>
+ <input type="number" id="stress"></div><br>
+<div class="row">
+<label>仕事</label>
+ <input type="number" id="work"></div><br>
+<div class="row">
+<label>勉強</label>
+ <input type="number" id="study"></div><br>
+<div class="row">
+  <label>家事育児</label>
+ <input type="number" id="child"></div>
+
+<button onclick="saveToday()">今日を保存する</button>
+
+<div id="popup" class="popup">💾 保存したよ！</div>
+
+<h2 id="result"></h2>
+
+<center>
+<div class="chart-card" >
+  <canvas id="myChart"></canvas>
+</div></center>
+
+
+
+<script>
+
+
+    function showPopup() {
+  const popup = document.getElementById("popup");
+  popup.classList.add("show");
+
+  setTimeout(() => {
+    popup.classList.remove("show");
+  }, 1500);
+}
+
+function saveToday() {
+  calcTotal();
+  showPopup(); // 今の値を確定保存
+
+}
+
+let myChart = null;
+
+function calcTotal() {
+
+  let total =
+    (Number(document.getElementById("body").value) || 0) +
+    (Number(document.getElementById("stress").value) || 0) +
+    (Number(document.getElementById("work").value) || 0) +
+    (Number(document.getElementById("study").value) || 0) +
+    (Number(document.getElementById("child").value) || 0) ;
+ 
+  let message = "";
+  let result = document.getElementById("result");
+
+  if (total >= 11) {
+    message = "🌙 今日は守る日（休もう）";
+    result.className = "bad";
+  } else if (total >= 6) {
+    message = "🌿 調整しながらいこう";
+    result.className = "normal";
+  } else {
+    message = "✨ 動ける日！";
+    result.className = "good";
+  }
+
+  result.textContent = "合計: " + total + " → " + message;
+
+  // 入力保存
+  localStorage.setItem("body", document.getElementById("body").value);
+  localStorage.setItem("stress", document.getElementById("stress").value);
+  localStorage.setItem("work", document.getElementById("work").value);
+  localStorage.setItem("study", document.getElementById("study").value);
+  localStorage.setItem("child", document.getElementById("child").value);
+
+  // 日付保存
+  let today = new Date().toLocaleDateString();
+  let data = JSON.parse(localStorage.getItem("records")) || [];
+
+  let existing = data.find(item => item.date === today);
+
+  if (existing) {
+    existing.total = total;
+  } else {
+    data.push({ date: today, total: total });
+  }
+
+  localStorage.setItem("records", JSON.stringify(data));
+
+  drawChart();
+}
+
+window.onload = function() {
+
+  document.getElementById("body").value = localStorage.getItem("body") || "";
+  document.getElementById("stress").value = localStorage.getItem("stress") || "";
+  document.getElementById("work").value = localStorage.getItem("work") || "";
+  document.getElementById("study").value = localStorage.getItem("study1") || "";
+  document.getElementById("child").value = localStorage.getItem("child") || "";
+
+
+  drawChart();
+}
+
+function drawChart() {
+
+  let data = JSON.parse(localStorage.getItem("records")) || [];
+
+  let labels = data.map(item => item.date);
+  let totals = data.map(item => item.total);
+
+  let today = new Date().toLocaleDateString();
+
+  // ⭐ 今日だけ色変える
+ let pointColors = labels.map(date =>
+  date === today ? "#ffd93d" : "#6c6cff"
+);
+
+  // ⭐ 今日だけサイズ変える（任意）
+  let pointSizes = labels.map(date =>
+    date === today ? 8 : 5
+  );
+
+  if (myChart) {
+    myChart.destroy();
+  }
+
+  myChart = new Chart(document.getElementById("myChart"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: totals,
+        borderColor: "#6c6cff",
+        backgroundColor: "rgba(108,108,255,0.1)",
+        tension: 0.4,
+        fill: true,
+
+        pointRadius: pointSizes, // ←ここ
+        pointHoverRadius: 8,
+        pointBackgroundColor: pointColors // ←ここ
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+</script>
+
+
+
+</div>
+</body>
+</html>

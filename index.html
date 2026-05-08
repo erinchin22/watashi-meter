@@ -4,49 +4,57 @@
   <meta charset="UTF-8">
   <title>わたしメーター</title>
 
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="style.css">
- 
+
  <!-- Chart.jsはここ -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
+<body>
 <link rel="apple-touch-icon" href="icon.png">
 
 
-<body>
     <div class="container">
 
   <div class="header">
 
-  <p id="today"></p><br>
+<p id="today"></p><br>
 <h1>わたしメーター</h1>
 
+
+<br>
  <p>疲れ0〜5で入力してね</p>
 
-<div>
 
-
-</center>
 <div class="row">
   <label>身体の疲れ</label>
- <input type="number" id="body"></div><br>
+ <input type="number" id="body"></div>
 <div class="row">
  <label>対人関係</label>
- <input type="number" id="stress"></div><br>
+ <input type="number" id="stress"></div>
 <div class="row">
 <label>仕事</label>
- <input type="number" id="work"></div><br>
+ <input type="number" id="work"></div>
 <div class="row">
 <label>勉強</label>
- <input type="number" id="study"></div><br>
+ <input type="number" id="study"></div>
 <div class="row">
   <label>家事育児</label>
  <input type="number" id="child"></div>
 
 </div>
 
-<button onclick="saveToday()">今日を保存する</button>
+
+<center>
+<p><textarea id="memo" placeholder="今日のひとこと🌿"></textarea>
+</p></center>
+
+
+<button onclick="saveToday()">保存する</button>
 
 <p id="savedStatus"></p>
 
@@ -54,27 +62,63 @@
 
 <h2 id="result"></h2>
 
-<center>
+
 <div class="chart-card" >
+
+<div class="week-nav">
+
+  <!-- ◀ 過去週へ -->
+  <button onclick="prevWeek()">◀</button>
+
+  <p id="weekRange"></p>
+
+  <!-- ▶ 今週側へ戻る -->
+  <button onclick="nextWeek()">▶</button>
+
+</div>
+
+
   <canvas id="myChart"></canvas>
-</div></center>
 
 
 
 <script>
+// =========================
+// 週送り制御
+// =========================
 
+// ◀ 過去へ
+function prevWeek() {
 
-    function showPopup() {
-  const popup = document.getElementById("popup");
-  popup.classList.add("show");
+  // 保存データ取得
+  let data = JSON.parse(localStorage.getItem("records")) || [];
 
-  setTimeout(() => {
-    popup.classList.remove("show");
-  }, 1500);
+  // 1週間ごと
+  let pageSize = 7;
+
+  // 最大ページ数
+  let maxPage = Math.ceil(data.length / pageSize) - 1;
+
+  // 最大を超えないようにする
+  if (currentPage < maxPage) {
+    currentPage++;
+    drawChart();
+  }
+}
+
+// ▶ 新しい週へ
+function nextWeek() {
+
+  // 0より小さくしない
+  if (currentPage > 0) {
+    currentPage--;
+    drawChart();
+  }
 }
 
 
 let myChart = null;
+let currentPage = 0;
 
 function calcTotal() {
 
@@ -122,12 +166,32 @@ function calcTotal() {
 
   localStorage.setItem("records", JSON.stringify(data));
 
-  drawChart();
+ let bgColor = "";
+
+if (total >= 11) {
+  bgColor = "rgba(255, 99, 132, 0.15)"; // 赤
+} else if (total >= 6) {
+  bgColor = "rgba(255, 206, 86, 0.15)"; // 黄色
+} else {
+  bgColor = "rgba(54, 162, 235, 0.15)"; // 青
+
 }
+
+  }
+
 
 
 function saveToday() {
   calcTotal();
+
+  let today = new Date().toLocaleDateString();
+  let memos = JSON.parse(localStorage.getItem("memos")) || {};
+
+  memos[today] = document.getElementById("memo").value;
+
+  localStorage.setItem("memos", JSON.stringify(memos));
+
+
   showPopup(); // 今の値を確定保存
 
   document.getElementById("savedStatus").textContent = "✅ 今日は保存済み";
@@ -136,17 +200,37 @@ function saveToday() {
 
 window.onload = function() {
 
+  //       // ⭐テスト用過去データ！！！！👇
+  // if (!localStorage.getItem("records")) {
+  //   let testData = [];
+
+  //   for (let i = 0; i < 20; i++) {
+  //     let d = new Date();
+  //     d.setDate(d.getDate() - i);
+
+  //     testData.push({
+  //       date: d.toLocaleDateString(),
+  //       total: Math.floor(Math.random() * 15)
+  //     });
+  //   }
+
+  //   localStorage.setItem("records", JSON.stringify(testData));
+  // }
+
+
   document.getElementById("body").value = localStorage.getItem("body") || "";
   document.getElementById("stress").value = localStorage.getItem("stress") || "";
   document.getElementById("work").value = localStorage.getItem("work") || "";
-  document.getElementById("study").value = localStorage.getItem("study1") || "";
+  document.getElementById("study").value = localStorage.getItem("study") || "";
   document.getElementById("child").value = localStorage.getItem("child") || "";
+  document.getElementById("memo").value =
+  localStorage.getItem("memo") || "";
 
 let now = new Date();
 
 let week = ["日","月","火","水","木","金","土"];
 
-let text = 
+let text =
   now.getFullYear() + "年" +
   (now.getMonth() + 1) + "月" +
   now.getDate() + "日（" +
@@ -159,32 +243,148 @@ let data = JSON.parse(localStorage.getItem("records")) || [];
 
 let exists = data.find(item => item.date === today);
 
-if (exists) {
-  document.getElementById("savedStatus").textContent = "✅ 今日は保存済み";
-} else {
-  document.getElementById("savedStatus").textContent = "📝 まだ保存してない";
-}
+let memos = JSON.parse(localStorage.getItem("memos")) || {};
 
+let startX = 0;
+
+const canvas = document.getElementById("myChart");
+
+
+canvas.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+
+canvas.addEventListener("touchend", e => {
+  let endX = e.changedTouches[0].clientX;
+
+  // ← 左スワイプ（過去へ）
+  if (startX - endX > 50) {
+
+    let data = JSON.parse(localStorage.getItem("records")) || [];
+    let pageSize = 7;
+    let maxPage = Math.ceil(data.length / pageSize) - 1;
+
+    if ((currentPage + 1) * 7 < data.length) {
+      currentPage++;
+      drawChart();
+    }
+  }
+
+  // → 右スワイプ（今へ戻る）
+  if (endX - startX > 50) {
+
+    if (currentPage > 0) {
+      currentPage--;
+      drawChart();
+    }
+  }
+});
 
 
   drawChart();
+
+
+
+if (exists) {
+  document.getElementById("savedStatus").textContent = "✅ 今日は保存済み";
+} else {
+  document.getElementById("savedStatus").textContent = "📝 まだ保存してないよ";
 }
+
+}
+
+const bgPlugin = {
+  id: 'custom_bg',
+  beforeDraw: (chart) => {
+    const {ctx, chartArea, scales} = chart;
+
+    if (!chartArea) return;
+
+    const {top, bottom, left, right} = chartArea;
+    const y = scales.y;
+
+    ctx.save();
+
+    // 🔵 元気ゾーン
+    ctx.fillStyle = "rgba(54, 162, 235, 0.08)";
+    ctx.fillRect(left, y.getPixelForValue(5), right - left, bottom - y.getPixelForValue(5));
+
+    // 🟡 調整ゾーン
+    ctx.fillStyle = "rgba(255, 206, 86, 0.08)";
+    ctx.fillRect(left, y.getPixelForValue(10), right - left, y.getPixelForValue(5) - y.getPixelForValue(10));
+
+    // 🔴 休むゾーン
+    ctx.fillStyle = "rgba(255, 99, 132, 0.08)";
+    ctx.fillRect(left, top, right - left, y.getPixelForValue(10) - top);
+
+    ctx.restore();
+  }
+};
+
 
 function drawChart() {
 
   let data = JSON.parse(localStorage.getItem("records")) || [];
 
-  let labels = data.map(item => item.date);
-  let totals = data.map(item => item.total);
+  if (data.length === 0) return;
+
+  // 日付順に並べる（古い→新しい）
+  data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // 基準日（ページで移動）
+  let baseDate = new Date();
+  baseDate.setDate(baseDate.getDate() - currentPage * 7);
+
+  let day = baseDate.getDay();
+  let diff = (day === 0 ? -6 : 1 - day);
+
+  let monday = new Date(baseDate);
+  monday.setDate(baseDate.getDate() + diff);
+
+  let labels = [];
+  let totals = [];
+  let realDates = [];
+
+  for (let i = 0; i < 7; i++) {
+    let d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+
+   let dateStr = d.toLocaleDateString();
+       realDates.push(dateStr);
+
+// 曜日
+let week = ["日","月","火","水","木","金","土"];
+
+// グラフ表示用
+let label =
+  (d.getMonth() + 1) + "/" +
+  d.getDate() +
+  "(" + week[d.getDay()] + ")";
+
+// 表示ラベル
+labels.push(label);
+
+
+    let found = data.find(item => item.date === dateStr);
+    totals.push(found ? found.total : null);
+  }
+
+  // 表示テキスト
+  let weekLabel = labels[0] + " 〜 " + labels[6];
+  document.getElementById("weekRange").textContent = weekLabel;
 
   let today = new Date().toLocaleDateString();
 
-  // ⭐ 今日だけ色変える
- let pointColors = labels.map(date =>
-  date === today ? "#ffd93d" : "#6c6cff"
-);
+  let pointColors = labels.map((date, index) => {
+    if (date === today) {
+      let total = totals[index];
+      if (total >= 11) return "#ff6b6b";
+      if (total >= 6) return "#ffd93d";
+      return "#4dabf7";
+    }
+    return "rgba(108,108,255,0.2)";
+  });
 
-  // ⭐ 今日だけサイズ変える（任意）
   let pointSizes = labels.map(date =>
     date === today ? 8 : 5
   );
@@ -200,31 +400,75 @@ function drawChart() {
       datasets: [{
         data: totals,
         borderColor: "#6c6cff",
-        backgroundColor: "rgba(108,108,255,0.1)",
         tension: 0.4,
-        fill: true,
-
-        pointRadius: pointSizes, // ←ここ
-        pointHoverRadius: 8,
-        pointBackgroundColor: pointColors // ←ここ
+        fill: false,
+        pointHitRadius: 30,
+        pointRadius: pointSizes,
+        pointBackgroundColor: pointColors
       }]
     },
     options: {
+      interaction: {
+    mode: 'nearest',
+    intersect: false
+      },
       plugins: {
         legend: { display: false }
       },
       scales: {
-        y: {
-          beginAtZero: true
-        }
+        y: { beginAtZero: true }
       }
-    }
+    },
+
+    plugins: [bgPlugin]
+
   });
+
+
+const canvas = document.getElementById("myChart");
+
+canvas.onclick = function (evt) {
+  const points = myChart.getElementsAtEventForMode(
+    evt,
+    "nearest",
+    { intersect: true },
+    true
+  );
+
+  if (!points.length) return;
+
+  const index = points[0].index;
+
+  const date = realDates[index];
+  const value = myChart.data.datasets[0].data[index];
+
+  let memos = JSON.parse(localStorage.getItem("memos")) || {};
+  let memo = memos[date] || "メモなし";
+
+  let message = "";
+  if (value >= 11) message = "🌙 休もうの日";
+  else if (value >= 6) message = "🌿 調整の日";
+  else message = "✨ 動ける日";
+
+  document.querySelector("#selectedCard .date").textContent = date;
+  document.querySelector("#selectedCard .value").textContent =
+    value + " pt " + message;
+  document.querySelector("#selectedCard .memo").textContent =
+    "📝 " + memo;
+};
 }
+
+
 
 </script>
 
 
+<p id="selectedData"></p>
+      <div id="selectedCard" class="selected-card">
+  <div class="date">日付</div>
+  <div class="value">グラフタップでログ表示</div>
+  <div class="memo"></div>
+</div>
 
 </div>
 </body>

@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<link rel="apple-touch-icon" href="icon.png">
 <link rel="stylesheet" href="style.css">
 
  <!-- Chart.jsはここ -->
@@ -15,16 +15,12 @@
 </head>
 
 <body>
-<link rel="apple-touch-icon" href="icon.png">
 
-
-    <div class="container">
-
+  <div class="container">
   <div class="header">
 
 <p id="today"></p><br>
 <h1>わたしメーター</h1>
-
 
 <br>
  <p>疲れ0〜5で入力してね</p>
@@ -120,6 +116,23 @@ function nextWeek() {
 let myChart = null;
 let currentPage = 0;
 
+function showPopup() {
+
+  const popup = document.getElementById("popup");
+
+  popup.classList.add("show");
+
+  setTimeout(() => {
+    popup.classList.remove("show");
+  }, 2000);
+}
+
+function getTodayString(date = new Date()) {
+  return date.getFullYear() + "-" +
+    String(date.getMonth() + 1).padStart(2, "0") + "-" +
+    String(date.getDate()).padStart(2, "0");
+}
+
 function calcTotal() {
 
   let total =
@@ -153,7 +166,7 @@ function calcTotal() {
   localStorage.setItem("child", document.getElementById("child").value);
 
   // 日付保存
-  let today = new Date().toLocaleDateString();
+  let today = getTodayString()
   let data = JSON.parse(localStorage.getItem("records")) || [];
 
   let existing = data.find(item => item.date === today);
@@ -182,9 +195,10 @@ if (total >= 11) {
 
 
 function saveToday() {
+
   calcTotal();
 
-  let today = new Date().toLocaleDateString();
+  let today = getTodayString()
   let memos = JSON.parse(localStorage.getItem("memos")) || {};
 
   memos[today] = document.getElementById("memo").value;
@@ -196,7 +210,13 @@ function saveToday() {
 
   document.getElementById("savedStatus").textContent = "✅ 今日は保存済み";
 
+    // 最新データで再描画
+  drawChart();
+
 }
+
+
+
 
 window.onload = function() {
 
@@ -238,7 +258,7 @@ let text =
 
 document.getElementById("today").textContent = text;
 
-let today = new Date().toLocaleDateString();
+let today = getTodayString()
 let data = JSON.parse(localStorage.getItem("records")) || [];
 
 let exists = data.find(item => item.date === today);
@@ -257,32 +277,28 @@ canvas.addEventListener("touchstart", e => {
 canvas.addEventListener("touchend", e => {
   let endX = e.changedTouches[0].clientX;
 
-  // ← 左スワイプ（過去へ）
-  if (startX - endX > 50) {
+ // ← 左スワイプ（今へ戻る）
+if (startX - endX > 50) {
 
-    let data = JSON.parse(localStorage.getItem("records")) || [];
-    let pageSize = 7;
-    let maxPage = Math.ceil(data.length / pageSize) - 1;
-
-    if ((currentPage + 1) * 7 < data.length) {
-      currentPage++;
-      drawChart();
-    }
+  if (currentPage > 0) {
+    currentPage--;
+    drawChart();
   }
+}
 
-  // → 右スワイプ（今へ戻る）
-  if (endX - startX > 50) {
+// → 右スワイプ（過去へ）
+if (endX - startX > 50) {
 
-    if (currentPage > 0) {
-      currentPage--;
-      drawChart();
-    }
+  let data = JSON.parse(localStorage.getItem("records")) || [];
+
+  if ((currentPage + 1) * 7 < data.length) {
+    currentPage++;
+    drawChart();
   }
+}
 });
 
-
   drawChart();
-
 
 
 if (exists) {
@@ -349,7 +365,7 @@ function drawChart() {
     let d = new Date(monday);
     d.setDate(monday.getDate() + i);
 
-   let dateStr = d.toLocaleDateString();
+   let dateStr = getTodayString(d)
        realDates.push(dateStr);
 
 // 曜日
@@ -373,19 +389,23 @@ labels.push(label);
   let weekLabel = labels[0] + " 〜 " + labels[6];
   document.getElementById("weekRange").textContent = weekLabel;
 
-  let today = new Date().toLocaleDateString();
+ let today = getTodayString();
 
-  let pointColors = labels.map((date, index) => {
-    if (date === today) {
-      let total = totals[index];
-      if (total >= 11) return "#ff6b6b";
-      if (total >= 6) return "#ffd93d";
-      return "#4dabf7";
-    }
-    return "rgba(108,108,255,0.2)";
-  });
+let pointColors = realDates.map((date, index) => {
 
-  let pointSizes = labels.map(date =>
+  let total = totals[index];
+
+  if (date === today) {
+
+    if (total >= 11) return "#ff6b6b";
+    if (total >= 6) return "#ffd93d";
+    return "#4dabf7";
+  }
+
+  return "rgba(108,108,255,0.2)";
+});
+
+  let pointSizes = realDates.map(date =>
     date === today ? 8 : 5
   );
 

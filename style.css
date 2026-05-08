@@ -246,14 +246,19 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 6px;
+   width: 100%;
 }
 
-.week-nav button{
-  background: none;
+.week-nav button {
+  -webkit-appearance: none;
+  appearance: none;
+
+  background: transparent;
   border: none;
   box-shadow: none;
+  outline: none;
 
   font-size: 14px;
 
@@ -266,12 +271,12 @@ textarea {
   color: #999;
 }
 
-.week-nav{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+
+.week-nav button::before,
+.week-nav button::after {
+  display: none;
 }
+
 
 .week-nav button:hover {
   color:  #6c6cff;

@@ -427,18 +427,28 @@ let pointColors = realDates.map((date, index) => {
         pointBackgroundColor: pointColors
       }]
     },
-    options: {
-      interaction: {
+   
+ options: {
+  interaction: {
     mode: 'nearest',
     intersect: false
-      },
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: { beginAtZero: true }
+  },
+
+  plugins: {
+    legend: { display: false }
+  },
+
+  scales: {
+    y: {
+      beginAtZero: true,
+      min: 0,
+
+      ticks: {
+        stepSize: 1
       }
-    },
+    }
+  }
+},
 
     plugins: [bgPlugin]
 

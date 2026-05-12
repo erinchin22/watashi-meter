@@ -267,7 +267,9 @@ let memos = JSON.parse(localStorage.getItem("memos")) || {};
 
 let startX = 0;
 
+
 const canvas = document.getElementById("myChart");
+
 
 
 canvas.addEventListener("touchstart", e => {
@@ -427,8 +429,8 @@ let pointColors = realDates.map((date, index) => {
         pointBackgroundColor: pointColors
       }]
     },
-   
- options: {
+
+options: {
   interaction: {
     mode: 'nearest',
     intersect: false
@@ -442,7 +444,6 @@ let pointColors = realDates.map((date, index) => {
     y: {
       beginAtZero: true,
       min: 0,
-
       ticks: {
         stepSize: 1
       }
@@ -457,7 +458,11 @@ let pointColors = realDates.map((date, index) => {
 
 const canvas = document.getElementById("myChart");
 
+
+
+
 canvas.onclick = function (evt) {
+
   const points = myChart.getElementsAtEventForMode(
     evt,
     "nearest",
@@ -485,9 +490,9 @@ canvas.onclick = function (evt) {
     value + " pt " + message;
   document.querySelector("#selectedCard .memo").textContent =
     "📝 " + memo;
+
 };
 }
-
 
 
 </script>
